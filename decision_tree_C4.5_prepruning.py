@@ -65,12 +65,20 @@ def chooseBestFeat(dataSet):
     baseInfoGain=0.0
     numFeats=len(dataSet[0])-1
     for i in range(numFeats):
-        vals=[example[i] for example in dataSet]
-        uniqueVals=set(vals)
+        featVals=[example[i] for example in dataSet]
+        if type(featVals[0]).__name__=='float' or type(featVals[0]).__name__=='int':
+            sortedFeatVals=sorted(featVals)
+            splitList=[]
+            for j in range(len(featVals)-1):
+                splitList.append((sortedFeatVals[j]+sortedFeatVals[j+1])/2.0)
+            
+
+
+        uniqueFeatVals=set(featVals)
         newEntropy=0.0
         newInfoGain=0.0
         splitInfo=0.0
-        for value in uniqueVals:
+        for value in uniqueFeatVals:
             subDataSet=splitDataSet(dataSet,i,value)
             prob=float(len(subDataSet))/len(dataSet)
             splitInfo-=prob*log(prob,2)
