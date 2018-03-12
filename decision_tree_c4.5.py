@@ -81,7 +81,7 @@ def createTree(dataSet,labels):
     classList=[example[-1] for example in dataSet]
     if(classList.count(classList[0])==len(dataSet)):
         return classList[0]
-    if(len(dataSet[0])==2):
+    if(len(dataSet[0])==1):
         return majorityClass(classList)
     bestFeat=chooseBestFeat(dataSet,labels)
     bestFeatLabel=labels[bestFeat]

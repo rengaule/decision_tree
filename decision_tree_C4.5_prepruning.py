@@ -1,5 +1,6 @@
 from math import log,sqrt
 import operator
+import re
 
 def createDataSet():
     dataSet = [[1,'长', '粗', '男'],
@@ -59,58 +60,99 @@ def splitContinuousDataSet(dataSet,i,value,direction):
                 subDataSet.append(reduceData)
     return subDataSet
 
-def chooseBestFeat(dataSet):
+def chooseBestFeat(dataSet,labels):
     baseEntropy=calcShannonEntropy(dataSet)
-    bestFeat=-1
-    baseInfoGain=0.0
+    bestFeat=0
+    baseGainRatio=-1
     numFeats=len(dataSet[0])-1
+    bestSplitDic={}
+    i=0
+    print('dataSet[0]:' + str(dataSet[0]))
     for i in range(numFeats):
         featVals=[example[i] for example in dataSet]
+        #print('chooseBestFeat:'+str(i))
         if type(featVals[0]).__name__=='float' or type(featVals[0]).__name__=='int':
+            j=0
             sortedFeatVals=sorted(featVals)
             splitList=[]
             for j in range(len(featVals)-1):
                 splitList.append((sortedFeatVals[j]+sortedFeatVals[j+1])/2.0)
-            
-
-
-        uniqueFeatVals=set(featVals)
-        newEntropy=0.0
-        newInfoGain=0.0
-        splitInfo=0.0
-        for value in uniqueFeatVals:
-            subDataSet=splitDataSet(dataSet,i,value)
-            prob=float(len(subDataSet))/len(dataSet)
-            splitInfo-=prob*log(prob,2)
-            newEntropy-=prob*calcShannonEntropy(subDataSet)
-        newInfoGain=(baseEntropy-newEntropy)/splitInfo
-        if newInfoGain>baseInfoGain:
-            bestFeat=i
-            baseInfoGain=newInfoGain
-    return bestFeat
+            for j in range(len(splitList)):
+                newEntropy=0.0
+                gainRatio=0.0
+                splitInfo=0.0
+                value=splitList[j]
+                subDataSet0=splitContinuousDataSet(dataSet,i,value,0)
+                subDataSet1=splitContinuousDataSet(dataSet,i,value,1)
+                prob0=float(len(subDataSet0))/len(dataSet)
+                newEntropy-=prob0*calcShannonEntropy(subDataSet0)
+                prob1=float(len(subDataSet1))/len(dataSet)
+                newEntropy-=prob1*calcShannonEntropy(subDataSet1)
+                splitInfo-=prob0*log(prob0,2)
+                splitInfo-=prob1*log(prob1,2)
+                gainRatio=float(baseEntropy-newEntropy)/splitInfo
+                print('IVa '+str(j)+':'+str(splitInfo))
+                if gainRatio>baseGainRatio:
+                    baseGainRatio=gainRatio
+                    bestSplit=j
+                    bestFeat=i
+            bestSplitDic[labels[i]]=splitList[bestSplit]
+        else:
+            uniqueFeatVals=set(featVals)
+            GainRatio=0.0
+            splitInfo=0.0
+            newEntropy=0.0
+            for value in uniqueFeatVals:
+                subDataSet=splitDataSet(dataSet,i,value)
+                prob=float(len(subDataSet))/len(dataSet)
+                splitInfo-=prob*log(prob,2)
+                newEntropy-=prob*calcShannonEntropy(subDataSet)
+            gainRatio=float(baseEntropy-newEntropy)/splitInfo
+            if gainRatio > baseGainRatio:
+                bestFeat = i
+                baseGainRatio = gainRatio
+    if type(dataSet[0][bestFeat]).__name__=='float' or type(dataSet[0][bestFeat]).__name__=='int':
+        bestFeatValue=bestSplitDic[labels[bestFeat]]
+        ##bestFeatValue=labels[bestFeat]+'<='+str(bestSplitValue)
+    if type(dataSet[0][bestFeat]).__name__=='str':
+        bestFeatValue=labels[bestFeat]
+    return bestFeat,bestFeatValue
 
 
 
 def createTree(dataSet,labels):
-    Entropy=calcShannonEntropy(dataSet)
     classList=[example[-1] for example in dataSet]
-    if classList.count(classList[0])==len(dataSet):
-        return classList[0]
+    if len(set(classList))==1:
+        return classList[0][0]
     if len(dataSet[0])==1:
         return majorityClass(dataSet)
-    bestFeat=chooseBestFeat(dataSet)
-    bestFeatLabel=labels[bestFeat]
-    print('bestFeat:'+bestFeatLabel)
-    myTree={bestFeatLabel:{}}
-    del(labels[bestFeat])
-    featVals=[example[bestFeat] for example in dataSet]
-    uniqueVals=set(featVals)
-    for value in uniqueVals:
-        subLabels=labels[:]
-        myTree[bestFeatLabel][value]=createTree(splitDataSet(dataSet,bestFeat,value),subLabels)
+    Entropy = calcShannonEntropy(dataSet)
+    bestFeat,bestFeatLabel=chooseBestFeat(dataSet,labels)
+    print('bestFeat:'+str(bestFeat)+'--'+str(labels[bestFeat])+', bestFeatLabel:'+str(bestFeatLabel))
+    myTree={labels[bestFeat]:{}}
+    subLabels = labels[:bestFeat]
+    subLabels.extend(labels[bestFeat+1:])
+    print('subLabels:'+str(subLabels))
+    if type(dataSet[0][bestFeat]).__name__=='str':
+        featVals = [example[bestFeat] for example in dataSet]
+        uniqueVals = set(featVals)
+        print('uniqueVals:' + str(uniqueVals))
+        for value in uniqueVals:
+            reduceDataSet=splitDataSet(dataSet,bestFeat,value)
+            print('reduceDataSet:'+str(reduceDataSet))
+            myTree[labels[bestFeat]][value]=createTree(reduceDataSet,subLabels)
+    if type(dataSet[0][bestFeat]).__name__=='int' or type(dataSet[0][bestFeat]).__name__=='float':
+        value=bestFeatLabel
+        greaterDataSet=splitContinuousDataSet(dataSet,bestFeat,value,0)
+        smallerDataSet=splitContinuousDataSet(dataSet,bestFeat,value,1)
+        print('greaterDataset:' + str(greaterDataSet))
+        print('smallerDataSet:' + str(smallerDataSet))
+        print('== ' * len(dataSet[0]))
+        myTree[labels[bestFeat]]['>' + str(value)] = createTree(greaterDataSet, subLabels)
+        print(myTree)
+        print('== ' * len(dataSet[0]))
+        myTree[labels[bestFeat]]['<=' + str(value)] = createTree(smallerDataSet, subLabels)
     return myTree
-
-
 
 if __name__ == '__main__':
     dataSet,labels=createDataSet()
