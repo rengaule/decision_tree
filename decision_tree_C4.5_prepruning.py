@@ -126,9 +126,27 @@ def createTree(dataSet,labels):
         return classList[0][0]
     if len(dataSet[0])==1:
         return majorityClass(dataSet)
+    # choose best feat
     Entropy = calcShannonEntropy(dataSet)
     bestFeat,bestFeatLabel=chooseBestFeat(dataSet,labels)
     print('bestFeat:'+str(bestFeat)+'--'+str(labels[bestFeat])+', bestFeatLabel:'+str(bestFeatLabel))
+    # pre prune for best feat
+    '''
+    if type(dataSet[0][bestFeat]).__name__=='str':
+        preLabelCount=classCount(dataSet)
+        subLabelCount = {}
+        featVals=[example[bestFeat] for example in dataSet]
+        for value in set(featVals):
+            reduceDataSet=splitDataSet(dataSet,bestFeat,value)
+            if majorityClass(reduceDataSet) not in subLabelCount.keys():
+                subLabelCount[majorityClass(reduceDataSet)]=len(reduceDataSet)
+            else:
+                subLabelCount[majorityClass(reduceDataSet)]+=len(reduceDataSet)
+
+        print('preLabelCount:'+str(preLabelCount))
+        print('subLabelCount:'+str(subLabelCount))
+    '''
+    # after pre_prune
     myTree={labels[bestFeat]:{}}
     subLabels = labels[:bestFeat]
     subLabels.extend(labels[bestFeat+1:])
