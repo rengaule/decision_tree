@@ -1,11 +1,13 @@
 import pandas as pd
 import operator
 
+# 这个路径是我的路径，你要记得改为自己的文件路径
 def loadDataSet(name='iris.csv'):
     path='/home/tyler/machine_learning/data/'
     dataSet=pd.read_csv(path+name)
     return dataSet
 
+# 统计dataSet中每个不同数值的个数，返回字典类型counts
 def classCount(dataSet):
     counts={}
     labels=dataSet.iloc[:,-1]
@@ -15,6 +17,7 @@ def classCount(dataSet):
         counts[one]+=1
     return counts
 
+# 计算dataSet的基尼指数
 def calcGini(dataSet):
     gini=1.00
     counts=classCount(dataSet)
@@ -23,11 +26,13 @@ def calcGini(dataSet):
         gini-=(prob*prob)
     return gini
 
+# 在dataSet中返回数目最多的类别标记
 def majorityClass(dataSet):
     counts=classCount(dataSet)
     sortedCounts=sorted(counts.items(),key=operator.itemgetter(1),reverse=True)
     return sortedCounts[0][0]
 
+# 根据索引i、值value和方向direction分割dataSet，返回大于/小于value的子数据集
 def splitContinuousDataSet(dataSet,i,value,direction):
     if direction==0:
         subDataSet=dataSet[dataSet.iloc[:,i]>value]
@@ -36,12 +41,13 @@ def splitContinuousDataSet(dataSet,i,value,direction):
     reduceDataSet=subDataSet.drop(subDataSet.columns[i],axis=1)
     return reduceDataSet
 
+# 根据索引i和值value分割ｄａｔaSet，返回值为value的子数据集
 def splitDataSet(dataSet,i,value):
     subDataSet=dataSet[dataSet.iloc[:,i]==value]
     reduceDataSet=subDataSet.drop(subDataSet.columns[i],axis=1)
     return reduceDataSet
 
-
+# 选择dataSet众多属性中最优划分属性
 def chooseBestFeat(dataSet):
     labels=dataSet.iloc[:,-1]
     feats=dataSet.columns
@@ -85,10 +91,7 @@ def chooseBestFeat(dataSet):
         bestFeatValue=dataSet.columns[bestFeat]
     return bestFeat,bestFeatValue
 
-
-
-
-
+# 创建树的函数，将不断递归调用，直至满足条件
 def createTree(dataSet):
     gini=calcGini(dataSet)
     if len(dataSet.columns)==2:
@@ -111,9 +114,9 @@ def createTree(dataSet):
         uniqBestFeatVals=set(bestFeatValues)
         for value in uniqBestFeatVals:
             myTree[bestFeatLabel][bestFeatValue]=createTree(splitDataSet(dataSet,bestFeat,value))
-
     return myTree
 
+# 主函数，程序入口
 if __name__ == '__main__':
     dataSet=loadDataSet()
     dataSet._convert(float)
