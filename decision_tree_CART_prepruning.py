@@ -120,7 +120,7 @@ def prePrune(dataSet,bestFeat,bestFeatLabel,bestFeatValue):
 # 创建树的函数，将不断递归调用，直至满足条件
 def createTree(dataSet):
     gini=calcGini(dataSet)
-    if len(dataSet.columns)==2:
+    if len(dataSet.columns)==1:
         return majorityClass(dataSet)
     if len(set(dataSet.iloc[:,-1]))==1:
         return dataSet.iloc[0,-1]

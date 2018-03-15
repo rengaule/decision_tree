@@ -1,5 +1,6 @@
 import pandas as pd
 import operator
+import re
 
 # 这个路径是我的路径，你要记得改为自己的文件路径
 def loadDataSet(name='iris.csv'):
@@ -94,7 +95,7 @@ def chooseBestFeat(dataSet):
 # 创建树的函数，将不断递归调用，直至满足条件
 def createTree(dataSet):
     gini=calcGini(dataSet)
-    if len(dataSet.columns)==2:
+    if len(dataSet.columns)==1:
         return majorityClass(dataSet)
     if len(set(dataSet.iloc[:,-1]))==1:
         return dataSet.iloc[0,-1]
@@ -116,9 +117,42 @@ def createTree(dataSet):
             myTree[bestFeatLabel][bestFeatValue]=createTree(splitDataSet(dataSet,bestFeat,value))
     return myTree
 
+
+# 将生成的树用于测试集
+def classifyTree(Tree, labels, data):
+    firstStr = list(Tree.keys())[0]
+    tempTree = Tree[firstStr]
+    featIndex = list(labels).index(firstStr)
+    for one in tempTree.keys():
+        subTree = tempTree[one]
+        if type(subTree).__name__ == 'dict':
+            if '>' in one:
+                value = float(re.compile("(>.+)").search(one).group()[1:])
+                if data[featIndex] > value:
+                    classLabel = classifyTree(subTree, labels, data)
+            if '<=' in one:
+                value = float(re.compile("(<=.+)").search(one).group()[2:])
+                if data[featIndex] <= value:
+                    classLabel = classifyTree(subTree, labels, data)
+        else:
+            classLabel = subTree
+    return classLabel
+
+
+# 测试分类的正确率
+def testing(Tree, dataSet):
+    error=0
+    for i in range(len(dataSet)):
+        if classifyTree(Tree,dataSet.columns,dataSet.iloc[i,:])!= dataSet.iloc[i,-1]:
+            error+=1
+    return 1-float(error)/len(dataSet)
+
+
 # 主函数，程序入口
 if __name__ == '__main__':
     dataSet=loadDataSet()
     dataSet._convert(float)
     labels=dataSet.columns
-    print(createTree(dataSet))
+    myTree=createTree(dataSet)
+    print(myTree)
+    print('正确率'+str(testing(myTree,dataSet)))
