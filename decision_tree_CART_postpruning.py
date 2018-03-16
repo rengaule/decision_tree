@@ -1,6 +1,7 @@
 import pandas as pd
 import operator
 import re
+import copy
 
 # 这个路径是我的路径，你要记得改为自己的文件路径
 def loadDataSet(name='iris.csv'):
@@ -138,14 +139,45 @@ def classifyTree(Tree, labels, data):
             classLabel = subTree
     return classLabel
 
-
 # 测试分类的正确率
 def testing(Tree, dataSet):
-    error=0
+    error=0.0
     for i in range(len(dataSet)):
         if classifyTree(Tree,dataSet.columns,dataSet.iloc[i,:])!= dataSet.iloc[i,-1]:
             error+=1
     return 1-float(error)/len(dataSet)
+
+# 测试节点的正确率
+def testPoint(value,dataSet):
+    error=0.0
+    for i in range(len(dataSet)):
+        if value!=dataSet.iloc[i,-1]:
+            error+=1
+    return error
+
+def postPrune(Tree,labels,dataSet):
+    firstStr=list(Tree.keys())[0]
+    tempTree=Tree[firstStr]
+    featKey=copy.deepcopy(firstStr)
+    featIndex=list(labels).index(featKey)
+    for key in tempTree.keys():
+        subTree=tempTree[key]
+        if type(subTree).__name__=='dict':
+            if type(dataSet.iloc[0,featIndex]).__name__=='str':
+                Tree[firstStr][key]=postPrune(subTree,labels,dataSet)
+            else:
+                if '>' in key:
+                    value = float(re.compile("(>.+)").search(key).group()[1:])
+                    Tree[firstStr][key] = postPrune(subTree, labels,
+                                                    splitContinuousDataSet(dataSet, featIndex, value, 0))
+                if '<=' in key:
+                    value = float(re.compile("(<=.+)").search(key).group()[2:])
+                    Tree[firstStr][key] = postPrune(subTree, labels,
+                                                    splitContinuousDataSet(dataSet, featIndex, value, 1))
+    if testing(Tree,dataSet) <= testPoint(majorityClass(dataSet),dataSet):
+        return Tree
+    return majorityClass(dataSet)
+
 
 
 # 主函数，程序入口
@@ -154,5 +186,10 @@ if __name__ == '__main__':
     dataSet._convert(float)
     labels=dataSet.columns
     myTree=createTree(dataSet)
+    print('======= before post prune =======')
     print(myTree)
-    print('正确率'+str(testing(myTree,dataSet)))
+    print('******* after post prune ********')
+    postPruTree=postPrune(myTree,labels,dataSet)
+    print(postPruTree)
+    #print('正确率'+str(testing(myTree,dataSet)))
+
