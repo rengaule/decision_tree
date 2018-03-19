@@ -1,5 +1,6 @@
 import pandas as pd
 import operator
+from decision_tree.treePloter import createPlot
 
 # 这个路径是我的路径，你要记得改为自己的文件路径
 def loadDataSet(name='iris.csv'):
@@ -161,4 +162,6 @@ if __name__ == '__main__':
     dataSet=loadDataSet()
     dataSet._convert(float)
     labels=dataSet.columns
-    print(createTree(dataSet))
+    myTree = createTree(dataSet, labels)
+    print(myTree)
+    createPlot(myTree)

@@ -1,5 +1,6 @@
 from math import log
 import operator
+from decision_tree.treePloter import createPlot
 
 def createDataSet():
     dataSet = [[1,'长', '粗', '男'],
@@ -97,4 +98,6 @@ def createTree(dataSet,labels):
 
 if __name__ == '__main__':
     dataSet,labels=createDataSet()
-    print(createTree(dataSet,labels))
+    myTree=createTree(dataSet,labels)
+    print(myTree)
+    createPlot(myTree)

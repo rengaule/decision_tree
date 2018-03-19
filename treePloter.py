@@ -59,8 +59,7 @@ def plotTree(myTree, parentPt, nodeTxt):  # if the first key tells you what feat
     secondDict = myTree[firstStr]
     plotTree.yOff = plotTree.yOff - 1.0 / plotTree.totalD
     for key in secondDict.keys():
-        if type(secondDict[
-                    key]).__name__ == 'dict':  # test to see if the nodes are dictonaires, if not they are leaf nodes
+        if type(secondDict[key]).__name__ == 'dict':  # test to see if the nodes are dictonaires, if not they are leaf nodes
             plotTree(secondDict[key], cntrPt, str(key))  # recursion
         else:  # it's a leaf node print the leaf node
             plotTree.xOff = plotTree.xOff + 1.0 / plotTree.totalW
@@ -100,3 +99,7 @@ def retrieveTree(i):
     return listOfTrees[i]
 
     # createPlot(thisTree)
+
+if __name__ == '__main__':
+    Tree=retrieveTree(1)
+    createPlot(Tree)

@@ -2,6 +2,7 @@ import pandas as pd
 import operator
 import re
 import copy
+from decision_tree.treePloter import createPlot
 
 # 这个路径是我的路径，你要记得改为自己的文件路径
 def loadDataSet(name='iris.csv'):
@@ -192,4 +193,5 @@ if __name__ == '__main__':
     postPruTree=postPrune(myTree,labels,dataSet)
     print(postPruTree)
     #print('正确率'+str(testing(myTree,dataSet)))
+    createPlot(myTree)
 
